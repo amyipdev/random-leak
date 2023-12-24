@@ -67,7 +67,6 @@ static int iterate_kallsyms(void *data,
 	// endianness of read doesn't matter
 	if (buf.pack % ((RAND_DET / BYTES_TO_FETCH) << 3) != 0)
 		return 0;
-
 	struct data_kallsyms_it *dat = (struct data_kallsyms_it *) data;
 	crypto_rng_get_bytes(rng, buf.bytes, 1);
  	// bytes to pull: min3(count_rem, rand, PAGE_SIZE - (symaddr % PAGE_SIZE)) % 16
@@ -123,13 +122,11 @@ static ssize_t proc_write(struct file *file,
                           size_t count,
                           loff_t *offset) {
 	u32 new_bytes_val;
-	// safety check user buffer
-	if (buf[count - 1] != 0) {
-		pr_emerg("invalid buffer, count = %zu", count);
-		pr_emerg("eob: %d", (int) buf[count - 1]);
-		return -EINVAL;
-	}
-	u32 ret = kstrtou32(buf, 10, &new_bytes_val);
+	char nbuf[11];
+	if (copy_from_user(nbuf, buf, min(count, 10UL)))
+		return -EFAULT;
+	nbuf[10] = 0;
+	u32 ret = kstrtou32(nbuf, 10, &new_bytes_val);
 	if (ret != 0)
 		return ret;
 	// avoid DBZ
