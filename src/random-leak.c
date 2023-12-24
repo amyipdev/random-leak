@@ -11,6 +11,16 @@
  *   truly random kernel data, you'd likely need to perform
  *   operations with the memory mapper that would be incredibly
  *   unsafe and potentially architecture-dependent.
+ * - May occasionally cause a BUG/OOPS trigger on a #PF/equiv.
+ *   This happens if a part of kernel memory gets unloaded
+ *   before it can be read from. If this happens, you can keep
+ *   using things like normal - but DON'T UNLOAD THE MODULE.
+ *   Unloading the module after a failure will prevent you from
+ *   reloading it and will force you to hard-reboot when you
+ *   want to shut down. Shutting down without unloading works fine.
+ * - Functionality depends on kprobes working and being unrestricted,
+ *   as well as kallsyms and other symbols not having been uncompiled
+ *   from the kernel. The latter will not show at compile time.
  */
 
 #define pr_fmt(fmt) "%s: " fmt, KBUILD_MODNAME
@@ -22,7 +32,6 @@
 #include <linux/proc_fs.h>
 #include <linux/kstrtox.h>
 #include <linux/sprintf.h>
-//#include <linux/kallsyms.h>
 #include <linux/kprobes.h>
 #include <linux/err.h>
 #include <linux/minmax.h>
@@ -94,7 +103,6 @@ static ssize_t proc_read(struct file *file,
 	// only accept reads starting at beginning
 	if (*offset > 0)
 		return 0;
-	pr_info("so things be with cache = %zu, bytes = %zu", bytes_cache, count);
 	if (count < bytes_cache + 1)
 		return -EINVAL;
 	char *nbuf = kzalloc(bytes_cache + 1, GFP_KERNEL);
