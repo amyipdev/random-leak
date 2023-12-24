@@ -78,9 +78,9 @@ $ make
 > [Debian-deriatives](https://ubuntu.com/blog/how-to-sign-things-for-secure-boot)
 > (such as Debian, Ubuntu, Linux Mint, PopOS, Proxmox VE, and many more).
 
-Load the module into the kernel:https://github.com/amyipdev/random-leak/blob/main/src/random-leak.c
+Load the module into the kernel:
 
-```https://ubuntu.com/blog/how-to-sign-things-for-secure-boot
+```
 # insmod src/random-leak.ko
 ```
 
